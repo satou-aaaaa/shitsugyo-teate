@@ -49,7 +49,7 @@ function resolve(P) {
     case "tokuteiT": return t23(age, y) + "日";
     case "sa": { const d = t23(age, y) - g22(y); return d === 0 ? "同じ" : d > 0 ? `倒産のほうが${d}日長い` : null; }
     case "kikanPlus": { const yy = num(q, /入っていた期間は(\d+)年/);
-      if (/就職が困難/.test(q)) return age >= 45 ? "1年と60日" : "1年";
+      if (/就職が困難/.test(q)) return age >= 45 && yy >= 1 ? "1年と60日" : "1年";
       if (/倒産|解雇/.test(q)) return age >= 45 && age < 60 && yy >= 20 ? "1年と30日" : "1年";
       return "1年"; }
     case "encho": return /最長どこまで/.test(q) ? "最長4年" : "続けて30日以上";
@@ -113,7 +113,7 @@ function resolve(P) {
 const html = readFileSync(path.join(root, "index.html"), "utf8"), gen = readFileSync(path.join(root, "data.js"), "utf8"), readme = readFileSync(path.join(root, "README.md"), "utf8");
 const ext = [...html.matchAll(/(?:src|href)="(https?:[^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https:\/\/fonts\.googleapis\.com(\/|$)|^https:\/\/ko-fi\.com\/satouaaaaa$/.test(u));
 check("外から読むのは文字（Google Fonts）だけ。スクリプト・広告・解析を入れない（出典のリンクは押したときに開くだけ）", ext.length === 0 && ![...html.matchAll(/<script[^>]+src="([^"]+)"/g)].some((m) => /^https?:/.test(m[1])), ext.join(","));
-check("CSP で通信先を自分だけにしている", /connect-src 'self'/.test(html) && !/connect-src[^;"]*https/.test(html));
+check("CSP で通信先を自分だけにしている（connect-src は 'self' だけ。* や https: を足さない。CodeRabbit shitsugyo-teate#1）", (() => { const m = html.match(/connect-src([^;"]*)/); return !!m && m[1].trim().split(/\s+/).join(" ") === "'self'"; })());
 check("Math.random は練習・とことんの種だけ（今日の5問・上級は日付の乱数。data.js には無い）", (html.match(/Math\.random/g) || []).length === 2 && !/Math\.random/.test(gen));
 check("乱数は sort の比較の中で引かない（ブラウザで引く回数が変わる）", !/\.sort\(\s*\([^)]*\)\s*=>[^\n;]*\b(R|rng|rand|Math\.random)\s*\(/.test(html + gen));
 { const inl = html.split("<script>").slice(1).map((x) => x.split("</" + "script>")[0]).join("\n"); // index.html の中の script も見る（nemuri-kotsu#1 で行の途中に // を入れて画面が動かなくなった）
